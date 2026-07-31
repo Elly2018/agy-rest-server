@@ -23,4 +23,4 @@ bash run.sh API_KEY1,API_KEY2
 ```
 
 In python code it use split function to seperate the api keys\
-This mean it can take multiple free tier api key for maximized the free tier usage
+This means it can take multiple api keys for maximized the free tier usage
