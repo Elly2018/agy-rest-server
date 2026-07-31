@@ -8,9 +8,9 @@ So i wish to HTTP server which will use ai agent which have skills setup can eas
 
 ## Features
 
-- [ ] Can provide procontext (Base on URL)
-- [ ] Can provide files
-- [ ] Can provide web search enable
+- [x] Can provide procontext (Base on URL)
+- [x] Can provide files
+- [x] Can provide web search enable
 
 ## Setup
 

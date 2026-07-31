@@ -51,6 +51,7 @@ def get_all_books():
     model="gemini-3.1-flash-lite",
     api_key=current_key, 
     skills_paths=[skill_path],
+    enable_google_search=True,
     system_instructions=SYSTEM_INSTRUCTION
   )
   
