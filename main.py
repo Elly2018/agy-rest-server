@@ -4,6 +4,7 @@ import sys
 from google.antigravity import Agent, LocalAgentConfig
 from flask import Flask, jsonify, request
 from waitress import serve
+import json
 
 app = Flask(__name__)
 
@@ -21,7 +22,8 @@ Analyze the issue and respond ONLY with a valid JSON object matching this schema
   "error_type": "What kinda of error is this base on stacktrace and testing title",
   "error_summary": "Brief explanation of what went wrong",
   "root_cause": "Detailed technical root cause",
-  "code_snippet": "Corrected code block or command if applicable (or null)"
+  "code_snippet": "Corrected code block or command if applicable (or null)",
+  "vaild": "A boolean which defined if agent successfully attempt triage"
 }
 Do NOT include markdown formatting, code fences (like ```json), or conversational text outside the JSON object.
 If any of the input is missing, return all the data fullfilled with blank text.
@@ -30,11 +32,12 @@ If any of the input is missing, return all the data fullfilled with blank text.
 @app.route("/api/triage", methods=["POST"])
 def get_all_books():
   global GEMINI_API_KEY_COUNTER
-  
+  print("Received triage request !")
   payload = request.get_json(silent=True) or {}
-  component_data = payload.get("components")
-  test_title = payload.get("test_title")
-  stacktrace_data = payload.get("stacktrace")
+  component_data = str(payload.get("components"))
+  context_data = str(payload.get("context"))
+  test_title = str(payload.get("test_title"))
+  stacktrace_data = str(payload.get("stacktrace"))
   
   current_key = GEMINI_API_KEY[GEMINI_API_KEY_COUNTER]
   GEMINI_API_KEY_COUNTER = (GEMINI_API_KEY_COUNTER + 1) % len(GEMINI_API_KEY)
@@ -48,7 +51,6 @@ def get_all_books():
     model="gemini-3.1-flash-lite",
     api_key=current_key, 
     skills_paths=[skill_path],
-    enable_google_search=True,
     system_instructions=SYSTEM_INSTRUCTION
   )
   
@@ -58,31 +60,40 @@ def get_all_books():
       prompt += "\n"
       prompt += component_data
       prompt += "\n"
+      prompt = "Here is the context data:"
+      prompt += "\n"
+      prompt += context_data
+      prompt += "\n"
       prompt += "Here is the test case title:"
+      prompt += "\n"
       prompt += test_title
       prompt += "\n"
       prompt += "Here is the stacktrace:"
       prompt += stacktrace_data
       
-      print(f"  User: {prompt}")
+      print(f"req:\n{prompt}\n")
 
       response = await my_agent.chat(prompt)
 
-      # Await the full aggregated text response.
       response_text = await response.text()
-      print(f"  Agent: {response_text}")
+      print(f"res:\n{response_text}\n")
+      return response_text
       
   try:
       agent_reply = asyncio.run(run_agent())
-      return jsonify({
+      res = jsonify({
           "success": True,
-          "response": agent_reply
+          "response": json.loads(agent_reply)
       }), 200
+      print(res)
+      return res
   except Exception as e:
-      return jsonify({
+      res = jsonify({
           "success": False,
           "error": str(e)
       }), 500
+      print(e, res)
+      return res
 
 if __name__ == "__main__":
     print("Server start: ", PORT)
