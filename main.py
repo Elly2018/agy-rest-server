@@ -93,6 +93,6 @@ def get_all_books():
 if __name__ == "__main__":
     print(f"Server start on port: {PORT}")
     try:
-        serve(app, host="0.0.0.0", port=PORT)  # ✅ CORRECT
+        serve(app, host="0.0.0.0", port=PORT)
     except KeyboardInterrupt:
         print("\nServer shut down cleanly.")
