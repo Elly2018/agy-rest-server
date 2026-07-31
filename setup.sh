@@ -6,4 +6,4 @@ REQ_FILE="requirements.txt"
 python3 -m venv "$ENV_DIR"
 source "$ENV_DIR/bin/activate"
 pip install --upgrade pip setuptools wheel
-pip install -r "$REQ_FILE"
+pip install --no-cache-dir -r "$REQ_FILE" --default-timeout=1000
