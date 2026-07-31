@@ -4,7 +4,7 @@ Just a tool help me stuff
 
 In my current job, My daily works require me make a bunch of judgement. which is tired as hell.
 
-So i wish to make a agent which take restapi http get and with skills setup and easily solve my works.
+So i wish to HTTP server which will use ai agent which have skills setup can easily solve my daily works.
 
 ## Setup
 
