@@ -11,9 +11,31 @@ GEMINI_API_KEY = [key.strip() for key in sys.argv[1].split(',') if key.strip()]
 GEMINI_API_KEY_COUNTER = 0
 PORT=8080
 
-@app.route("/api/chat", methods=["GET"])
+SYSTEM_INSTRUCTION = """
+You are an expert AI software triage agent.
+The user will provide an error message or log stacktrace.
+The user will provide an file components .
+Analyze the issue and respond ONLY with a valid JSON object matching this schema:
+{
+  "category": "Which buganizer component match with error type",
+  "error_type": "What kinda of error is this base on stacktrace and testing title",
+  "error_summary": "Brief explanation of what went wrong",
+  "root_cause": "Detailed technical root cause",
+  "code_snippet": "Corrected code block or command if applicable (or null)"
+}
+Do NOT include markdown formatting, code fences (like ```json), or conversational text outside the JSON object.
+If any of the input is missing, return all the data fullfilled with blank text.
+"""
+
+@app.route("/api/triage", methods=["POST"])
 def get_all_books():
   global GEMINI_API_KEY_COUNTER
+  
+  payload = request.get_json(silent=True) or {}
+  component_data = payload.get("components")
+  test_title = payload.get("test_title")
+  stacktrace_data = payload.get("stacktrace")
+  
   current_key = GEMINI_API_KEY[GEMINI_API_KEY_COUNTER]
   GEMINI_API_KEY_COUNTER = (GEMINI_API_KEY_COUNTER + 1) % len(GEMINI_API_KEY)
   
@@ -25,13 +47,23 @@ def get_all_books():
   config = LocalAgentConfig(
     model="gemini-3.1-flash-lite",
     api_key=current_key, 
-    skills_paths=[skill_path]
+    skills_paths=[skill_path],
+    enable_google_search=True,
+    system_instructions=SYSTEM_INSTRUCTION
   )
   
   async def run_agent():
     async with Agent(config) as my_agent:
-      # Ask the agent what skills it has.
-      prompt = "What available skills do you have?"
+      prompt = "Here is the component data:"
+      prompt += "\n"
+      prompt += component_data
+      prompt += "\n"
+      prompt += "Here is the test case title:"
+      prompt += test_title
+      prompt += "\n"
+      prompt += "Here is the stacktrace:"
+      prompt += stacktrace_data
+      
       print(f"  User: {prompt}")
 
       response = await my_agent.chat(prompt)
